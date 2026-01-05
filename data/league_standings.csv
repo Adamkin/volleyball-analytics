@@ -1,10 +1,10 @@
-Team,Points,Rank
-ODI 3,19,1
-MVC de Hangar 2,17,2
-ABC Volleybal 3,14,3
-Best 4,13,4
-Ledûb volleybal 1,11,5
-Primo 2,11,6
-Pegasus 1,8,7
-Bravo 3,5,8
-PBF Volleybal 2,4,9
+Team,League_Pts,Played,Scored,Conceded,Delta,PPM,Rank
+ODI 3,19,8,566,457,109,2.38,1
+MVC de Hangar 2,17,8,568,514,54,2.12,2
+ABC Volleybal 3,14,8,545,502,43,1.75,3
+Best 4,13,7,492,442,50,1.86,4
+Primo 2,11,7,454,442,12,1.57,5
+Ledûb volleybal 1,11,7,473,465,8,1.57,6
+Pegasus 1,8,8,506,560,-54,1.0,7
+Bravo 3,5,8,452,582,-130,0.62,8
+PBF Volleybal 2,4,7,415,507,-92,0.57,9

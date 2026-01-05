@@ -1,31 +1,37 @@
 import pandas as pd
+import os
 
-# 1. Load the clean data
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 df = pd.read_csv("data/volleyball_clean.csv")
 
-# 2. Calculate points earned at Home
-home_standings = df.groupby('Thuis')['Points_Home'].sum().reset_index()
-home_standings.columns = ['Team', 'Points']
+# 1. Home Stats: (Points, Games, Scored, Conceded)
+home = df.groupby('Thuis').agg(
+    League_Pts=('Points_Home', 'sum'),
+    Played=('Thuis', 'count'),
+    Scored=('Small_Pts_Home', 'sum'),
+    Conceded=('Small_Pts_Away', 'sum')
+).reset_index().rename(columns={'Thuis': 'Team'})
 
-# 3. Calculate points earned Away
-away_standings = df.groupby('Gast')['Points_Away'].sum().reset_index()
-away_standings.columns = ['Team', 'Points']
+# 2. Away Stats
+away = df.groupby('Gast').agg(
+    League_Pts=('Points_Away', 'sum'),
+    Played=('Gast', 'count'),
+    Scored=('Small_Pts_Away', 'sum'),
+    Conceded=('Small_Pts_Home', 'sum')
+).reset_index().rename(columns={'Gast': 'Team'})
 
-# 4. Merge them (Union)
-total_standings = pd.concat([home_standings, away_standings])
+# 3. Merge & Sum
+total = pd.concat([home, away]).groupby('Team').sum().reset_index()
 
-# 5. Sum it all up by Team
-final_table = total_standings.groupby('Team')['Points'].sum().reset_index()
+# 4. Calculate The "Delta"
+total['Delta'] = total['Scored'] - total['Conceded']
+total['PPM'] = (total['League_Pts'] / total['Played']).round(2)
 
-# 6. Sort it (Highest points first)
-final_table = final_table.sort_values(by='Points', ascending=False)
+# 5. Sort by League Points first, then Delta (Tie Breaker)
+total = total.sort_values(by=['League_Pts', 'Delta'], ascending=[False, False])
+total['Rank'] = range(1, len(total) + 1)
 
-# 7. Add a Rank column (1, 2, 3...)
-final_table['Rank'] = range(1, len(final_table) + 1)
-
-# Display the League Table
-print("--- LEAGUE STANDINGS ---")
-print(final_table[['Rank', 'Team', 'Points']].to_string(index=False))
-
-# Save it to send to your captain later
-final_table.to_csv("data/league_standings.csv", index=False)
+# Save
+total.to_csv("data/league_standings.csv", index=False)
+print("✅ Standings Calculated (including Point Delta).")

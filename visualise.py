@@ -2,30 +2,46 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-# Set folder correctly again
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-# 1. Load the standings
 df = pd.read_csv("data/league_standings.csv")
 
-# 2. Create the Bar Chart
-plt.figure(figsize=(10, 6)) # Size of the window
-bars = plt.barh(df['Team'], df['Points'], color='#50fa7b') # Dracula Green color
+# Setup Plot
+fig, ax = plt.subplots(figsize=(10, 6)) # Made it slightly wider
+ax.axis('tight')
+ax.axis('off')
 
-# 3. Make it pretty
-plt.xlabel('Points')
-plt.title('League Standings 2026')
-plt.gca().invert_yaxis() # Put #1 at the top, not bottom
-plt.grid(axis='x', linestyle='--', alpha=0.7)
+# Data Selection (Added Delta)
+table_data = df[['Rank', 'Team', 'League_Pts', 'Played', 'PPM', 'Delta']]
+col_labels = ['#', 'Team', 'Pts', 'Gms', 'Avg', 'Delta']
 
-# 4. Add the numbers on the bars
-for bar in bars:
-    width = bar.get_width()
-    plt.text(width + 0.5, bar.get_y() + bar.get_height()/2, 
-             f'{int(width)}', va='center')
+# Draw Table
+the_table = ax.table(cellText=table_data.values,
+                     colLabels=col_labels,
+                     loc='center',
+                     cellLoc='center',
+                     colWidths=[0.05, 0.35, 0.1, 0.1, 0.1, 0.1]) # Adjust column widths
 
-# 5. Show it (and save it)
-plt.tight_layout()
-plt.savefig("output/standings_chart.png")
-print("Chart saved as 'standings_chart.png'!")
-plt.show() # Pops up a window
+# Styling
+the_table.auto_set_font_size(False)
+the_table.set_fontsize(11)
+the_table.scale(1.2, 1.8)
+
+for (row, col), cell in the_table.get_celld().items():
+    if row == 0:
+        cell.set_facecolor('#40466e')
+        cell.set_text_props(color='white', weight='bold')
+    elif row % 2 == 0:
+        cell.set_facecolor('#f2f2f2')
+
+# Highlight the Delta column (Column index 5)
+    if col == 5 and row > 0:
+        val = int(table_data.iloc[row-1]['Delta'])
+        if val > 0:
+            cell.set_text_props(color='green', weight='bold')
+        elif val < 0:
+            cell.set_text_props(color='#D22B2B') # Red
+
+plt.title("NDRC League Standings 2026", fontsize=16, weight='bold', pad=20)
+plt.savefig("output/standings_table.png", bbox_inches='tight', dpi=300)
+print("✅ Table saved with Delta column!")

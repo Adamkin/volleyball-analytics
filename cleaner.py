@@ -1,46 +1,51 @@
 import pandas as pd
+import os
 
-# 1. Load the raw data
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# 1. Load Data
 df = pd.read_csv("data/volleyball_raw.csv")
-
-print("Raw rows:", len(df))
-
-# 2. Drop rows where there is no result yet (Future matches)
-# Matches that haven't happened usually have NaN (empty) in 'Uitslag'
 df = df.dropna(subset=['Uitslag'])
 
-# 3. The Function to clean the "Uitslag" column
-def parse_score(score_string):
+# 2. The Advanced Parser
+def parse_full_stats(score_string):
     try:
-        # Example: "3-0 25-21, 25-21, 26-24"
+        # Input: "3-0 25-21, 25-21, 26-24"
         
-        # Split into [Result, Details] -> ["3-0", "25-21, 25-21..."]
-        parts = score_string.split(' ', 1) 
+        # separate "3-0" from the rest
+        parts = score_string.split(' ', 1)
         match_result = parts[0] # "3-0"
         
-        # Split "3-0" into Home and Away
+        # Parse Sets (3 vs 0)
         sets = match_result.split('-')
-        home_sets = int(sets[0])
-        away_sets = int(sets[1])
+        sets_h = int(sets[0])
+        sets_a = int(sets[1])
         
-        return pd.Series([home_sets, away_sets])
+        # Parse Small Points (76 vs 66)
+        points_h = 0
+        points_a = 0
+        
+        if len(parts) > 1:
+            # We have set scores: "25-21, 25-21, 26-24"
+            raw_scores = parts[1].split(',')
+            for s in raw_scores:
+                s = s.strip() # Remove spaces
+                if '-' in s:
+                    p = s.split('-')
+                    points_h += int(p[0])
+                    points_a += int(p[1])
+        
+        return pd.Series([sets_h, sets_a, points_h, points_a])
     except:
-        return pd.Series([0, 0])
+        return pd.Series([0, 0, 0, 0])
 
-# 4. Apply the function
-# This creates two new columns instantly
-df[['Sets_Home', 'Sets_Away']] = df['Uitslag'].apply(parse_score)
+# 3. Apply the function
+df[['Sets_Home', 'Sets_Away', 'Small_Pts_Home', 'Small_Pts_Away']] = df['Uitslag'].apply(parse_full_stats)
 
-# 5. Calculate Points (The Business Logic)
-# Usually: 4-0 = 5pts, 3-2 = 3pts, etc. 
-# Or is it simple: 1 set = 1 point?
-# Based on your league: Usually 1 set won = 1 point in Dutch recreational leagues.
+# 4. Calculate League Points (1 set = 1 point logic)
 df['Points_Home'] = df['Sets_Home']
 df['Points_Away'] = df['Sets_Away']
 
-# Show the clean data
-print(df[['Thuis', 'Gast', 'Sets_Home', 'Sets_Away']].head())
-
-# Save the clean version
+# Save
 df.to_csv("data/volleyball_clean.csv", index=False)
-print("Saved clean data!")
+print("✅ Data Cleaned: Extracted Sets AND Small Points.")
