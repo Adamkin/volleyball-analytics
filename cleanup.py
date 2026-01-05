@@ -1,22 +1,28 @@
 import os
+import shutil
 
-files_to_delete = [
-    "data/volleyball_raw.csv",
-    "data/volleyball_clean.csv",
-    "data/league_standings.csv",
-    "output/standings_table.png"  # <--- CHANGED THIS LINE
-]
+folders_to_scrub = ["data", "output"]
 
-print("🧹 CLEANUP INITIATED...")
+print("🧹 NUCLEAR CLEANUP INITIATED...")
 
-for file_path in files_to_delete:
-    if os.path.exists(file_path):
-        try:
-            os.remove(file_path)
-            print(f"✅ Deleted: {file_path}")
-        except Exception as e:
-            print(f"❌ Error deleting {file_path}: {e}")
+for folder in folders_to_scrub:
+    # Check if folder exists
+    if os.path.exists(folder):
+        # List all files in the folder
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                # If it's a file, delete it
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                    print(f"✅ Deleted: {filename}")
+                # If it's a subfolder, remove it tree and all
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+                    print(f"✅ Deleted folder: {filename}")
+            except Exception as e:
+                print(f"❌ Failed to delete {file_path}. Reason: {e}")
     else:
-        print(f"⚠️  Skipped (Not found): {file_path}")
+        print(f"⚠️  Folder '{folder}' does not exist yet.")
 
-print("✨ Cleanup Complete.")
+print("✨ All folders are empty and ready.")

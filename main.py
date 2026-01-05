@@ -27,6 +27,9 @@ def main():
     run_step("cleaner.py", "Parsing Scores")
     run_step("standings.py", "Calculating Stats")
     run_step("visualise.py", "Generating Report")
+    run_step("prediction.py", "Running Match Predictor")
+    
+    print("\n=======================================")
     
     print("\n=======================================")
     print("✨ DONE. Check 'output/standings_table.png' ✨")
