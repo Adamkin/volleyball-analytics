@@ -1,7 +1,7 @@
 import pandas as pd
 
 # 1. Load the raw data
-df = pd.read_csv("volleyball_raw.csv")
+df = pd.read_csv("data/volleyball_raw.csv")
 
 print("Raw rows:", len(df))
 
@@ -42,5 +42,5 @@ df['Points_Away'] = df['Sets_Away']
 print(df[['Thuis', 'Gast', 'Sets_Home', 'Sets_Away']].head())
 
 # Save the clean version
-df.to_csv("volleyball_clean.csv", index=False)
+df.to_csv("data/volleyball_clean.csv", index=False)
 print("Saved clean data!")

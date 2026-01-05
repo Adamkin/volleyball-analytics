@@ -1,7 +1,7 @@
 import pandas as pd
 
 # 1. Load the clean data
-df = pd.read_csv("volleyball_clean.csv")
+df = pd.read_csv("data/volleyball_clean.csv")
 
 # 2. Calculate points earned at Home
 home_standings = df.groupby('Thuis')['Points_Home'].sum().reset_index()
@@ -28,4 +28,4 @@ print("--- LEAGUE STANDINGS ---")
 print(final_table[['Rank', 'Team', 'Points']].to_string(index=False))
 
 # Save it to send to your captain later
-final_table.to_csv("league_standings.csv", index=False)
+final_table.to_csv("data/league_standings.csv", index=False)

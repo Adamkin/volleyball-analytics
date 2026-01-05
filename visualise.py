@@ -6,7 +6,7 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # 1. Load the standings
-df = pd.read_csv("league_standings.csv")
+df = pd.read_csv("data/league_standings.csv")
 
 # 2. Create the Bar Chart
 plt.figure(figsize=(10, 6)) # Size of the window
@@ -26,6 +26,6 @@ for bar in bars:
 
 # 5. Show it (and save it)
 plt.tight_layout()
-plt.savefig("standings_chart.png") # Saves an image file
+plt.savefig("output/standings_chart.png")
 print("Chart saved as 'standings_chart.png'!")
 plt.show() # Pops up a window

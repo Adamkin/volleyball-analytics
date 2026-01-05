@@ -22,8 +22,8 @@ try:
         print(df.head())
         
         # Save it
-        df.to_csv("volleyball_raw.csv", index=False)
-        print("Saved to 'volleyball_raw.csv'.")
+        df.to_csv("data/volleyball_raw.csv", index=False)
+        print("Saved to 'data/volleyball_raw.csv'.")
     else:
         print("Still no table found. The layout might be very tricky.")
 
