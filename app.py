@@ -43,8 +43,8 @@ total_sets_won = my_games.apply(count_sets, axis=1).sum()
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Position", f"#{team_stats['Rank']}")
 col2.metric("League Points", team_stats['League_Pts'])
-col3.metric("Sets Won", total_sets_won)              # <--- Uses calculated variable now
-col4.metric("Points Per Match", f"{team_stats['PPM']:.2f}")
+#col3.metric("Sets Won", total_sets_won)              # <--- Uses calculated variable now
+col3.metric("Points Per Match", f"{team_stats['PPM']:.2f}")
 
 # NEW: Clean League Table (Logic moved to utils)
 with st.expander("🏆 View Full League Standings"):
