@@ -52,7 +52,12 @@ with st.expander("🏆 View Full League Standings"):
     display_table.columns = ['#', 'Team', 'Matches', 'Points', 'Point Delta'] 
 
     def highlight_team(row):
-        return ['background-color: #ffffcc'] * len(row) if row['Team'] == selected_team else [''] * len(row)
+        # Change to rgba(255, 215, 0, 0.2) -> 20% transparent gold
+        # This works on BOTH dark mode (white text) and light mode (black text)
+        if row['Team'] == selected_team:
+            return ['background-color: rgba(255, 215, 0, 0.2)'] * len(row)
+        else:
+            return [''] * len(row)
             
     st.dataframe(display_table.style.apply(highlight_team, axis=1), hide_index=True, use_container_width=True)
 
@@ -98,10 +103,8 @@ st.divider()
 
 # 3. THE MONEYBALL CHART
 st.subheader("📊 League Landscape")
-# Note: We already calculated the stats inside utils.calculate_league_table, 
-# but for the chart, we can re-use the raw DF logic or keep it here for custom plotting.
-# Keeping it here for flexibility in plotting.
-
+# Note: Stats are calculated via utils logic or raw DF here.
+# Re-calculating for plotting flexibility:
 home_stats = df.groupby('Thuis')[['Small_Pts_Home', 'Small_Pts_Away']].sum()
 away_stats = df.groupby('Gast')[['Small_Pts_Away', 'Small_Pts_Home']].sum()
 home_stats.columns = ['Scored', 'Conceded']
@@ -109,19 +112,39 @@ away_stats.columns = ['Scored', 'Conceded']
 total_stats = home_stats.add(away_stats, fill_value=0)
 
 fig, ax = plt.subplots(figsize=(10, 6))
-ax.scatter(total_stats['Conceded'], total_stats['Scored'], color='#bdc3c7', s=100, alpha=0.5)
 
+# A. Split the data
 if selected_team in total_stats.index:
-    team_data = total_stats.loc[selected_team]
-    ax.scatter(team_data['Conceded'], team_data['Scored'], color='#e74c3c', s=200, zorder=10)
-    ax.text(team_data['Conceded']-2, team_data['Scored']+5, selected_team, fontsize=12, fontweight='bold', color='#c0392b')
+    # Everyone ELSE
+    others = total_stats[total_stats.index != selected_team]
+    # My Team
+    my_team_data = total_stats.loc[[selected_team]]
+else:
+    others = total_stats
+    my_team_data = None
 
+# B. Plot "Others" (Grey, standard size)
+ax.scatter(others['Conceded'], others['Scored'], color='#bdc3c7', s=100, alpha=0.6)
+
+# Label "Others"
+for team_name, row in others.iterrows():
+    ax.text(row['Conceded']+1, row['Scored']+1, team_name, fontsize=8, alpha=0.6, color='gray')
+
+# C. Plot "My Team" (Red, SAME size, no grey underneath)
+if my_team_data is not None:
+    ax.scatter(my_team_data['Conceded'], my_team_data['Scored'], color='#e74c3c', s=100, zorder=10)
+    # Bold Red Label
+    ax.text(my_team_data['Conceded'].iloc[0]+1, my_team_data['Scored'].iloc[0]+1, selected_team, fontsize=10, fontweight='bold', color='#c0392b')
+
+# Averages and Grid
 ax.axhline(total_stats['Scored'].mean(), color='green', linestyle='--', alpha=0.3)
 ax.axvline(total_stats['Conceded'].mean(), color='blue', linestyle='--', alpha=0.3)
+
 ax.set_xlabel("Points Conceded (Right is Better)")
 ax.set_ylabel("Points Scored (Top is Better)")
 ax.invert_xaxis()
 ax.grid(True, linestyle=':', alpha=0.3)
+
 st.pyplot(fig)
 
 st.divider()
