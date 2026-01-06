@@ -125,3 +125,76 @@ ax.invert_xaxis()
 ax.grid(True, linestyle=':', alpha=0.3)
 
 st.pyplot(fig)
+
+st.divider()
+
+# 4. SEASON MOMENTUM (New Feature)
+st.subheader("📈 Season Momentum")
+
+# Filter matches for the selected team that are already played
+my_matches = schedule[
+    ((schedule['Thuis'] == selected_team) | (schedule['Gast'] == selected_team)) & 
+    (schedule['Uitslag'].notna())
+].copy()
+
+# --- DATE CLEANING HELPER ---
+def clean_dutch_date(date_str):
+    # Example Input: "Do 25-sep-'25"
+    try:
+        # 1. Map Dutch months to numbers
+        month_map = {
+            "jan": "01", "feb": "02", "mrt": "03", "apr": "04", "mei": "05", "jun": "06",
+            "jul": "07", "aug": "08", "sep": "09", "okt": "10", "nov": "11", "dec": "12"
+        }
+        
+        # 2. Get the date part (Remove the "Do " or "Za " prefix)
+        # Split by space and take the last part: "25-sep-'25"
+        clean_part = date_str.split(' ')[-1]
+        
+        # 3. Remove the apostrophe: "25-sep-25"
+        clean_part = clean_part.replace("'", "")
+        
+        # 4. Swap month name for number: "25-09-25"
+        for month_name, month_num in month_map.items():
+            if f"-{month_name}-" in clean_part:
+                clean_part = clean_part.replace(month_name, month_num)
+                break
+                
+        return clean_part
+    except:
+        return None
+
+# Apply the cleaner
+my_matches['Datum_Clean'] = my_matches['Datum'].apply(clean_dutch_date)
+
+# Convert to DateTime object (Format: Day-Month-Year(2digit))
+my_matches['Datum'] = pd.to_datetime(my_matches['Datum_Clean'], format='%d-%m-%y')
+# --- END CLEANING ---
+
+my_matches = my_matches.sort_values('Datum')
+
+# Updated Function: Calculates Net Difference (Won - Lost)
+def get_net_sets(row):
+    try:
+        raw_score = row['Uitslag'] # "3-1 25-14..."
+        main_score = raw_score.split(' ')[0] # "3-1"
+        
+        home_sets = int(main_score.split('-')[0])
+        away_sets = int(main_score.split('-')[1])
+        
+        if row['Thuis'] == selected_team:
+            return home_sets - away_sets # +3 or -1 etc.
+        else:
+            return away_sets - home_sets
+    except:
+        return 0
+
+# Apply the new logic
+my_matches['Net_Sets'] = my_matches.apply(get_net_sets, axis=1)
+my_matches['Team Performance (Cumulative)'] = my_matches['Net_Sets'].cumsum()
+
+# Plotting with a baseline
+st.line_chart(my_matches, x='Datum', y='Team Performance (Cumulative)')
+
+# Add a zero line explanation
+st.caption("📈 Rising Line = Winning more sets than losing. 📉 Falling Line = Losing more sets.")
