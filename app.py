@@ -38,6 +38,48 @@ col2.metric("League Points", team_stats['League_Pts']) # Fixed Name
 col3.metric("Sets Won", team_stats['Scored'])          # Fixed Name
 col4.metric("Points Per Match", f"{team_stats['PPM']:.2f}")
 
+# NEW: League Table with Point Delta
+with st.expander("🏆 View Full League Standings"):
+    
+    # 1. Calculate Small Points Delta (Reuse logic from Moneyball chart)
+    # Sum points when playing Home
+    h_s = df.groupby('Thuis')[['Small_Pts_Home', 'Small_Pts_Away']].sum()
+    h_s.columns = ['Scored', 'Conceded']
+    
+    # Sum points when playing Away
+    a_s = df.groupby('Gast')[['Small_Pts_Away', 'Small_Pts_Home']].sum()
+    a_s.columns = ['Scored', 'Conceded']
+    
+    # Combine
+    t_s = h_s.add(a_s, fill_value=0)
+    
+    # Calculate Delta
+    t_s['Point Delta'] = (t_s['Scored'] - t_s['Conceded']).astype(int)
+    
+    # 2. Merge with Official Standings
+    # We only want the Delta from our calc, the rest comes from the CSV
+    display_table = standings[['Rank', 'Team', 'Played', 'League_Pts']].copy()
+    display_table = display_table.merge(t_s[['Point Delta']], left_on='Team', right_index=True, how='left')
+    
+    # Sort by Rank
+    display_table = display_table.sort_values('Rank')
+    
+    # Rename columns for display
+    display_table.columns = ['#', 'Team', 'Matches', 'Points', 'Point Delta']
+
+    # 3. Styling
+    def highlight_team(row):
+        if row['Team'] == selected_team:
+            return ['background-color: #ffffcc'] * len(row)
+        else:
+            return [''] * len(row)
+            
+    st.dataframe(
+        display_table.style.apply(highlight_team, axis=1), 
+        hide_index=True, 
+        use_container_width=True
+    )
+
 st.divider()
 
 # 2. NEXT MATCH PREDICTOR
